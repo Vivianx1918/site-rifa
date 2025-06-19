@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chá Rifa de Casa Nova da Ivna</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #ede7f6, #f3e5f5);
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #4a148c;
+    }
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    h1 { font-size: 2.5em; }
+    h2 { font-size: 1.5em; color: #7b1fa2; }
+    p { text-align: center; font-size: 1.2em; margin-bottom: 30px; }
+    .rifa {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 15px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .cartao {
+      background: #ffffff;
+      border: 2px solid #d1c4e9;
+      border-radius: 14px;
+      padding: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: 0.3s;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cartao:hover {
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+      transform: scale(1.02);
+      cursor: pointer;
+    }
+    .cartao.reservado {
+      background-color: #d1c4e9;
+      color: #4a148c;
+      text-decoration: line-through;
+      cursor: not-allowed;
+    }
+    .imagem-premio {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+    .numero {
+      font-size: 1.8em;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .presente {
+      font-size: 1em;
+      margin: 8px 0;
+    }
+    .nome-reserva {
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+    .popup-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      width: 90%; max-width: 300px;
+    }
+    .popup-content input {
+      width: 90%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ccc;
+    }
+    .popup-content button {
+      background: #7b1fa2; color: #fff; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px;
+    }
+    .popup-content button:hover { background: #4a148c; }
+  </style>
+</head>
+<body>
+
+  <h1>Chá Rifa de Casa Nova da Ivna</h1>
+  <h2>Rifa - Prêmio: R$ 200</h2>
+  <p>Escolha um número e participe dessa conquista cheia de carinho!</p>
+
+  <div class="rifa" id="rifaContainer"></div>
+
+  <div class="popup" id="popup">
+    <div class="popup-content" id="popupContent"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCtoAH7xfXkF9P4NDCjmeKfH03NjNDQKzk",
+      authDomain: "teste-d69d3.firebaseapp.com",
+      projectId: "teste-d69d3",
+      storageBucket: "teste-d69d3.firebasestorage.app",
+      messagingSenderId: "1060333695523",
+      appId: "1:1060333695523:web:a5e87c6336158cae617796"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const premios = [
+      { nome:"Potes de mantimentos", imagem:"tupperware.png" },
+      { nome:"Fruteira", imagem:"fruits.png" },
+      { nome:"Espelho de corpo", imagem:"mirror.png" },
+      { nome:"Lixeira cozinha", imagem:"trash_cozinha.png" },
+      { nome:"Lixeira banheiro", imagem:"bin.png" },
+      { nome:"Varal de apartamento", imagem:"foldable-drying-rack.png" },
+      { nome:"Kit panelas antiaderente", imagem:"pots.png" },
+      { nome:"Escorredor macarrão e arroz", imagem:"colander.png" },
+      { nome:"Kit peneiras", imagem:"sieve.png" },
+      { nome:"Ralador Inox", imagem:"grater.png" },
+      { nome:"Escorredor de Louça", imagem:"dishes.png" },
+      { nome:"Cesto de roupas", imagem:"basket.png" },
+      { nome:"Balde e Bacia", imagem:"cleaning-bucket.png" },
+      { nome:"Airfryer", imagem:"food.png" },
+      { nome:"Conjunto assadeira de vidro", imagem:"bread.png" },
+      { nome:"Jogo de cama box casal", imagem:"bed.png" },
+      { nome:"Jogo de cama box casal", imagem:"bed.png" },
+      { nome:"Par de travesseiros", imagem:"pillow.png" },
+      { nome:"Ferro de passar", imagem:"iron.png" },
+      { nome:"Tábua de passar roupa", imagem:"ironing-board.png" },
+      { nome:"Kit frigideira antiaderente", imagem:"frying-pan.png" },
+      { nome:"Garrafas de água", imagem:"bottle.png" },
+      { nome:"Garrafa de café", imagem:"thermos.png" },
+      { nome:"Cafeteira", imagem:"coffee-maker.png" },
+      { nome:"Boleira", imagem:"stand.png" },
+      { nome:"Kit banheiro", imagem:"shampoo.png" },
+      { nome:"Kit pano de chão", imagem:"mat.png" },
+      { nome:"Kit de facas", imagem:"knife.png" },
+      { nome:"Vassoura e pá", imagem:"dustpan.png" },
+      { nome:"Rodo", imagem:"wiper.png" },
+      { nome:"Liquidificador", imagem:"blender.png" },
+      { nome:"Jogo de toalha", imagem:"towels.png" }
+    ];
+
+    const container = document.getElementById('rifaContainer');
+    const popup = document.getElementById('popup');
+    const popupContent = document.getElementById('popupContent');
+    let selecionado = null;
+
+    function carregarRifa(){
+      container.innerHTML = '';
+      db.collection('rifa').orderBy('numero').get().then(snap=>{
+        snap.forEach(doc=>{
+          const d = doc.data();
+          const c = document.createElement('div');
+          c.className = 'cartao' + (d.reservado? ' reservado':'');
+
+          const idx = d.numero-1;
+          c.innerHTML = `
+            <img src="${premios[idx].imagem}" class="imagem-premio" alt="">
+            <div class="numero">${d.numero}</div>
+            <div class="presente">${premios[idx].nome}</div>
+            <div class="nome-reserva">${d.nome||''}</div>`;
+          c.onclick = ()=> d.reservado ? mostrarPopup('Já reservado!') : abrirReserva(doc.id,d.numero);
+          container.appendChild(c);
+        });
+      });
+    }
+
+    function mostrarPopup(txt){
+      popupContent.innerHTML = `<h2>${txt}</h2><button onclick="fechar()">OK</button>`;
+      popup.style.display='flex';
+    }
+
+    function abrirReserva(id,num){
+      selecionado={id,num};
+      popupContent.innerHTML=`
+        <h2>Número ${num}</h2>
+        <input id="nomeIn" placeholder="Seu nome"><br>
+        <button onclick="confirmar()">Reservar</button>
+        <button onclick="fechar()">Cancelar</button>`;
+      popup.style.display='flex';
+    }
+
+    function confirmar(){
+      const nome=document.getElementById('nomeIn').value.trim();
+      if(!nome) return alert('Digite nome');
+      db.collection('rifa').doc(selecionado.id)
+        .update({nome,reservado:true})
+        .then(()=>{fechar();carregarRifa();});
+    }
+
+    function fechar(){ popup.style.display='none'; }
+
+    carregarRifa();
+  </script>
+
+</body>
+</html>
